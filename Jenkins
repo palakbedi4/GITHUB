@@ -1,0 +1,103 @@
+pipeline {
+    agent any
+
+    environment {
+        RECIPIENT_EMAIL = 's223072789@deakin.edu.au'
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the code...'
+                sh 'mvn clean package'
+            }
+        }
+        stage('Unit and Integration Tests') {
+            steps {
+                echo 'Running Unit and Integration Tests...'
+                sh 'mvn test'
+            }
+        }
+        stage('Code Analysis') {
+            steps {
+                echo 'Analyzing code with SonarQube...'
+                withSonarQubeEnv('SonarQube') { 
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        stage('Security Scan') {
+            steps {
+                echo 'Performing Security Scan with OWASP ZAP...'
+                sh 'zap-cli quick-scan --self-contained --start-options "-config api.disablekey=true" http://localhost:8080'
+            }
+        }
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Deploying to Staging Environment...'
+                sh 'aws deploy create-deployment --application-name MyApp --deployment-group-name StagingGroup --s3-location bucket=my-bucket,key=MyApp.zip,bundleType=zip'
+            }
+        }
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Running Integration Tests on Staging...'
+                sh 'mvn verify -Pstaging'
+            }
+        }
+        stage('Deploy to Production') {
+            steps {
+                echo 'Deploying to Production Environment...'
+                sh 'aws deploy create-deployment --application-name MyApp --deployment-group-name ProductionGroup --s3-location bucket=my-bucket,key=MyApp.zip,bundleType=zip'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline execution failed.'
+        }
+    }
+
+    post {
+        // Notify after Unit and Integration Tests stage
+        stage('Unit and Integration Tests') {
+            success {
+                mailNotification('Unit and Integration Tests', 'SUCCESS')
+            }
+            failure {
+                mailNotification('Unit and Integration Tests', 'FAILURE')
+            }
+        }
+
+        // Notify after Security Scan stage
+        stage('Security Scan') {
+            success {
+                mailNotification('Security Scan', 'SUCCESS')
+            }
+            failure {
+                mailNotification('Security Scan', 'FAILURE')
+            }
+        }
+    }
+}
+
+// Function to send email notifications with logs
+def mailNotification(stageName, status) {
+    def logFile = "${stageName}_log.txt"
+    def logContent = currentBuild.rawBuild.getLog(1000).join("\n")
+    writeFile file: logFile, text: logContent
+    
+    emailext (
+        to: "${RECIPIENT_EMAIL}",
+        subject: "${stageName} Stage - ${status}",
+        body: """The ${stageName} stage has completed with status: ${status}. 
+Please find the attached logs for more details.""",
+        attachmentsPattern: logFile
+    )
+}
