@@ -1,50 +1,79 @@
 pipeline {
     agent any
 
-    environment {
-        DIRECTORY_PATH = '/Users/palak/.jenkins/workspace/task5 on built-in'
-        TESTING_ENVIRONMENT = 'TestEnv'
-        PRODUCTION_ENVIRONMENT = 'GuillermoProduction'
-    }
-
     stages {
         stage('Build') {
             steps {
-                echo "Fetch the source code from the directory path specified by the environment variable: ${env.DIRECTORY_PATH}"
-                echo "Compile the code and generate any necessary artifacts"
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                echo "Running unit tests"
-                echo "Running integration tests"
+                echo 'Task: Build the code using a build automation tool to compile and package your code.'
+                echo 'Tool: Maven'
+                // Here you would typically add a Maven build step, e.g.,
+                // sh 'mvn clean install'
             }
         }
 
-        stage('Code Quality Check') {
+        stage('Unit and Integration Tests') {
             steps {
-                echo "Check the quality of the code"
+                echo 'Task: Run unit tests to ensure the code functions as expected and run integration tests to ensure the different components of the application work together as expected.'
+                echo 'Tools: JUnit for unit testing, JUnit + Mockito for integration testing'
+                // Here you would typically add steps to run tests, e.g.,
+                // sh 'mvn test'
+                // sh 'mvn verify'
             }
         }
 
-        stage('Deploy') {
+        stage('Code Analysis') {
             steps {
-                echo "Deploy the application to the testing environment specified by the environment variable: ${env.TESTING_ENVIRONMENT}"
+                echo 'Task: Integrate a code analysis tool to analyze the code and ensure it meets industry standards.'
+                echo 'Tool: SonarQube (integrated with Jenkins)'
+                // Here you would typically add steps to run SonarQube analysis, e.g.,
+                // sh 'mvn sonar:sonar'
             }
         }
 
-        stage('Approval') {
+        stage('Security Scan') {
             steps {
-                echo "Waiting for manual approval..."
-                sleep time: 10, unit: 'SECONDS'
+                echo 'Task: Perform a security scan on the code to identify any vulnerabilities.'
+                echo 'Tool: OWASP ZAP'
+                // Here you would typically add steps to run OWASP ZAP, e.g.,
+                // sh 'zap-baseline.py -t http://your-application-url'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Task: Deploy the application to a staging server.'
+                echo 'Tool: AWS EC2 instance'
+                // Here you would typically add steps to deploy to a staging environment, e.g.,
+                // sh 'aws deploy create-deployment --application-name your-app --deployment-group-name staging-group --s3-location bucket=your-bucket,key=your-app.zip'
+            }
+        }
+
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Task: Run integration tests on the staging environment to ensure the application functions as expected in a production-like environment.'
+                echo 'Tool: JUnit + Mockito (or similar tools)'
+                // Here you would typically add steps to run integration tests on staging, e.g.,
+                // sh 'mvn verify'
             }
         }
 
         stage('Deploy to Production') {
             steps {
-                echo "Deploy the code to the production environment: ${env.PRODUCTION_ENVIRONMENT}"
+                echo 'Task: Deploy the application to a production server.'
+                echo 'Tool: AWS EC2 instance'
+                // Here you would typically add steps to deploy to production, e.g.,
+                // sh 'aws deploy create-deployment --application-name your-app --deployment-group-name production-group --s3-location bucket=your-bucket,key=your-app.zip'
             }
         }
     }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
 }
+
