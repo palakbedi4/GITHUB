@@ -11,15 +11,7 @@ pipeline {
             }
         }
 
-        stage('Unit and Integration Tests') {
-            steps {
-                echo 'Task: Run unit tests to ensure the code functions as expected and run integration tests to ensure the different components of the application work together as expected.'
-                echo 'Tools: JUnit for unit testing, JUnit + Mockito for integration testing'
-                // Here you would typically add steps to run tests, e.g.,
-                // sh 'mvn test'
-                // sh 'mvn verify'
-            }
-        }
+        
 
         stage('Code Analysis') {
             steps {
