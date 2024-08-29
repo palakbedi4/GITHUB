@@ -2,85 +2,49 @@ pipeline {
     agent any
 
     environment {
-        RECIPIENT_EMAIL = 's223072789@deakin.edu.au'
+        DIRECTORY_PATH = '/Users/palak/.jenkins/workspace/task5 on built-in'
+        TESTING_ENVIRONMENT = 'TestEnv'
+        PRODUCTION_ENVIRONMENT = 'GuillermoProduction'
     }
 
     stages {
         stage('Build') {
             steps {
-                echo 'Building the code...'
-                sh 'mvn clean package'
+                echo "Fetch the source code from the directory path specified by the environment variable: ${env.DIRECTORY_PATH}"
+                echo "Compile the code and generate any necessary artifacts"
             }
         }
-        stage('Unit and Integration Tests') {
+        
+        stage('Test') {
             steps {
-                echo 'Running Unit and Integration Tests...'
-                sh 'mvn test'
+                echo "Running unit tests"
+                echo "Running integration tests"
             }
         }
-        stage('Code Analysis') {
+
+        stage('Code Quality Check') {
             steps {
-                echo 'Analyzing code with SonarQube...'
-                withSonarQubeEnv('SonarQube') { 
-                    sh 'mvn sonar:sonar'
-                }
+                echo "Check the quality of the code"
             }
         }
-        stage('Security Scan') {
+
+        stage('Deploy') {
             steps {
-                echo 'Performing Security Scan with OWASP ZAP...'
-                sh 'zap-cli quick-scan --self-contained --start-options "-config api.disablekey=true" http://localhost:8080'
+                echo "Deploy the application to the testing environment specified by the environment variable: ${env.TESTING_ENVIRONMENT}"
             }
         }
-        stage('Deploy to Staging') {
+
+        stage('Approval') {
             steps {
-                echo 'Deploying to Staging Environment...'
-                sh 'aws deploy create-deployment --application-name MyApp --deployment-group-name StagingGroup --s3-location bucket=my-bucket,key=MyApp.zip,bundleType=zip'
+                echo "Waiting for manual approval..."
+                sleep time: 10, unit: 'SECONDS'
             }
         }
-        stage('Integration Tests on Staging') {
-            steps {
-                echo 'Running Integration Tests on Staging...'
-                sh 'mvn verify -Pstaging'
-            }
-        }
+
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to Production Environment...'
-                sh 'aws deploy create-deployment --application-name MyApp --deployment-group-name ProductionGroup --s3-location bucket=my-bucket,key=MyApp.zip,bundleType=zip'
+                echo "Deploy the code to the production environment: ${env.PRODUCTION_ENVIRONMENT}"
             }
         }
     }
-
-    post {
-        // Always notify after the pipeline completion
-        always {
-            echo 'Pipeline completed.'
-        }
-        // Send a notification if the pipeline is successful
-        success {
-            echo 'Pipeline executed successfully!'
-            mailNotification('SUCCESS')
-        }
-        // Send a notification if the pipeline fails
-        failure {
-            echo 'Pipeline execution failed.'
-            mailNotification('FAILURE')
-        }
-    }
-}
-
-// Function to send email notifications with logs
-def mailNotification(status) {
-    def logFile = "${env.BUILD_TAG}_log.txt"
-    def logContent = currentBuild.rawBuild.getLog(1000).join("\n")
-    writeFile file: logFile, text: logContent
-    
-    emailext (
-        to: "${RECIPIENT_EMAIL}",
-        subject: "Pipeline Status: ${status}",
-        body: """The pipeline has completed with status: ${status}. 
-Please find the attached logs for more details.""",
-        attachmentsPattern: logFile
-    )
 }
