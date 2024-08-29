@@ -13,15 +13,7 @@ pipeline {
 
         
 
-        stage('Code Analysis') {
-            steps {
-                echo 'Task: Integrate a code analysis tool to analyze the code and ensure it meets industry standards.'
-                echo 'Tool: SonarQube (integrated with Jenkins)'
-                // Here you would typically add steps to run SonarQube analysis, e.g.,
-                // sh 'mvn sonar:sonar'
-            }
-        }
-
+        
         stage('Security Scan') {
             steps {
                 echo 'Task: Perform a security scan on the code to identify any vulnerabilities.'
