@@ -1,62 +1,75 @@
 pipeline {
     agent any
-
+    environment {
+        DIRECTORY_PATH = '/Users/palak/Documents/PROFESSIONAL PRACTICES/jenkinsfile'
+        TESTING_ENVIROMENT = '6.2C pipeline'
+        PRODUCTION_ENVIROMENT = 'PALAK BEDI'
+        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'  // Email to receive notifications
+    }
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
+                sleep(3)
+                echo "Building code using Maven..."
             }
         }
-        stage('Unit and Integration Tests') {
+        stage('Test') {
             steps {
-                echo 'Running Unit and Integration Tests...'
+                echo "Running Unit tests and integration from TestNG..."
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/test_logs.txt', allowEmptyArchive: true
+                    script {
+                        mail to: "palakbedi2004@gmail.com",
+                            subject: "Test Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                            body: "The Test stage has ${currentBuild.result}. Please check the logs attached.",
+                            attachments: 'test_logs.txt'
+                    }
+                }
             }
         }
         stage('Code Analysis') {
             steps {
-                echo 'Performing Code Analysis...'
+                echo "Performing Code analysis using SonarQube..."
             }
         }
         stage('Security Scan') {
             steps {
-                echo 'Performing Security Scan...'
+                echo "Performing Security Scan using OWASP..."
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/security_scan_logs.txt', allowEmptyArchive: true
+                    script {
+                        mail to: "palakbedi2004@gmail.com",
+                            subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                            body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
+                            attachments: 'security_scan_logs.txt'
+                    }
+                }
             }
         }
         stage('Deploy to Staging') {
             steps {
-                echo 'Deploying to Staging...'
+                echo "Deploying to staging in AWS CLI..."
             }
         }
-        stage('Integration Tests on Staging') {
+        stage('Integration tests on staging') {
             steps {
-                echo 'Running Integration Tests on Staging...'
+                echo 'Running integration tests on staging with Selenium...'
             }
         }
         stage('Deploy to Production') {
             steps {
-                echo 'Deploying to Production...'
+                echo "Deploying to production environment at AWS CLI"
             }
         }
     }
-
     post {
         always {
-            echo 'Pipeline finished.'
-        }
-        failure {
-            script {
-                // Send email with the log as an attachment
-                def log = currentBuild.rawBuild.getLog(100).join('\n')
-                mail to: 'palakbedi2004@gmail.com',
-                     subject: "Pipeline Failed: ${currentBuild.fullDisplayName}",
-                     body: "Pipeline failed. Check Jenkins for more details.\n\nLog:\n${log}"
-            }
-        }
-        success {
-            mail to: 'palakbedi2004@gmail.com',
-                 subject: "Pipeline Succeeded: ${currentBuild.fullDisplayName}",
-                 body: "Pipeline succeeded. All stages completed successfully."
+            echo "Pipeline completed."
         }
     }
-}
+} 
 
