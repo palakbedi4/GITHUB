@@ -1,68 +1,74 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        DIRECTORY_PATH = '/Users/adi/Desktop/SIT 223/6.2C'
+    environment {
+        DIRECTORY_PATH = '/Users/palak/Documents/PROFESSIONAL PRACTICES/jenkinsfile'
         TESTING_ENVIROMENT = '6.2C pipeline'
-        PRODUCTION_ENVIROMENT = 'ADITYA HINDOCHA'
+        PRODUCTION_ENVIROMENT = 'PALAK BEDI'
+        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'  // Email to receive notifications
     }
-    stages{
-        stage('Build'){
-            steps{
+    stages {
+        stage('Build') {
+            steps {
                 sleep(3)
                 echo "Building code using Maven..."
-             }
-        }
-        stage('Test'){
-            steps{
-                echo "Running Unit tests and integration from TestNG..."
             }
         }
-        stage('Code Analysis'){
-            steps{
+        stage('Test') {
+            steps {
+                echo "Running Unit tests and integration from TestNG..."
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/test_logs.txt', allowEmptyArchive: true
+                    script {
+                        mail to: "palakbedi2004@gmail.com",
+                            subject: "Test Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                            body: "The Test stage has ${currentBuild.result}. Please check the logs attached.",
+                            attachments: 'test_logs.txt'
+                    }
+                }
+            }
+        }
+        stage('Code Analysis') {
+            steps {
                 echo "Performing Code analysis using SonarQube..."
             }
         }
-        stage('Security Scan'){
-            steps{
+        stage('Security Scan') {
+            steps {
                 echo "Performing Security Scan using OWASP..."
             }
+            post {
+                always {
+                    archiveArtifacts artifacts: '**/security_scan_logs.txt', allowEmptyArchive: true
+                    script {
+                        mail to: "palakbedi2004@gmail.com",
+                            subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                            body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
+                            attachments: 'security_scan_logs.txt'
+                    }
+                }
+            }
         }
-        stage('Deploy to Staging'){
-            steps{
+        stage('Deploy to Staging') {
+            steps {
                 echo "Deploying to staging in AWS CLI..."
             }
         }
-        stage('Integration tests on staging'){
-            steps{
-                 echo 'Running integration tests on staging with Selenium...'
-            }   
+        stage('Integration tests on staging') {
+            steps {
+                echo 'Running integration tests on staging with Selenium...'
+            }
         }
-        stage('Deploy to Production'){
-            steps{
+        stage('Deploy to Production') {
+            steps {
                 echo "Deploying to production environment at AWS CLI"
             }
         }
     }
     post {
         always {
-            // Send email on test stage failure
-            script {
-                if (currentBuild.result == 'FAILURE' && env.STAGE_NAME == 'Test') {
-                    mail to: 'palakbedi2004@gmail.com',
-                        subject: "Test Stage Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                        body: "Test stage failed. Please check the logs for more information.",
-                        attachments: 'test_logs.txt'
-                }
-            }
-            // Send email on security scan stage failure
-            script {
-                if (currentBuild.result == 'FAILURE' && env.STAGE_NAME == 'Security Scan') {
-                    mail to: 'palakbedi2004@gmail.com',
-                        subject: "Security Scan Stage Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                        body: "Security scan stage failed. Please check the logs for more information.",
-                        attachments: 'security_scan_logs.txt'
-                }
-            }
+            echo "Pipeline completed."
         }
     }
 }
