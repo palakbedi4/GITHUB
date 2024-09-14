@@ -29,7 +29,11 @@ pipeline {
                 }
             }
         }
-        
+        stage('Code Analysis') {
+            steps {
+                echo "Performing Code analysis using SonarQube..."
+            }
+        }
         stage('Security Scan') {
             steps {
                 echo "Performing Security Scan using OWASP..."
@@ -68,4 +72,3 @@ pipeline {
         }
     }
 } 
-
