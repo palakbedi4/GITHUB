@@ -1,56 +1,68 @@
-pipeline {
+pipeline{
     agent any
-
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Task: Build the code using a build automation tool to compile and package your code.'
-                echo 'Tool: Maven'
-                // Here you would typically add a Maven build step, e.g.,
-                // sh 'mvn clean install'
+    environment{
+        DIRECTORY_PATH = '/Users/adi/Desktop/SIT 223/6.2C'
+        TESTING_ENVIROMENT = '6.2C pipeline'
+        PRODUCTION_ENVIROMENT = 'ADITYA HINDOCHA'
+    }
+    stages{
+        stage('Build'){
+            steps{
+                sleep(3)
+                echo "Building code using Maven..."
+             }
+        }
+        stage('Test'){
+            steps{
+                echo "Running Unit tests and integration from TestNG..."
             }
         }
-
-        
-
-        
-        stage('Security Scan') {
-            steps {
-                echo 'Task: Perform a security scan on the code to identify any vulnerabilities.'
-                echo 'Tool: OWASP ZAP'
-                // Here you would typically add steps to run OWASP ZAP, e.g.,
-                // sh 'zap-baseline.py -t http://your-application-url'
+        stage('Code Analysis'){
+            steps{
+                echo "Performing Code analysis using SonarQube..."
             }
         }
-
-        stage('Deploy to Staging') {
-            steps {
-                echo 'Task: Deploy the application to a staging server.'
-                echo 'Tool: AWS EC2 instance'
-                // Here you would typically add steps to deploy to a staging environment, e.g.,
-                // sh 'aws deploy create-deployment --application-name your-app --deployment-group-name staging-group --s3-location bucket=your-bucket,key=your-app.zip'
+        stage('Security Scan'){
+            steps{
+                echo "Performing Security Scan using OWASP..."
             }
         }
-
-        
-
-        stage('Deploy to Production') {
-            steps {
-                echo 'Task: Deploy the application to a production server.'
-                echo 'Tool: AWS EC2 instance'
-                // Here you would typically add steps to deploy to production, e.g.,
-                // sh 'aws deploy create-deployment --application-name your-app --deployment-group-name production-group --s3-location bucket=your-bucket,key=your-app.zip'
+        stage('Deploy to Staging'){
+            steps{
+                echo "Deploying to staging in AWS CLI..."
+            }
+        }
+        stage('Integration tests on staging'){
+            steps{
+                 echo 'Running integration tests on staging with Selenium...'
+            }   
+        }
+        stage('Deploy to Production'){
+            steps{
+                echo "Deploying to production environment at AWS CLI"
             }
         }
     }
-
     post {
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed.'
+        always {
+            // Send email on test stage failure
+            script {
+                if (currentBuild.result == 'FAILURE' && env.STAGE_NAME == 'Test') {
+                    mail to: 'palakbedi2004@gmail.com',
+                        subject: "Test Stage Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                        body: "Test stage failed. Please check the logs for more information.",
+                        attachments: 'test_logs.txt'
+                }
+            }
+            // Send email on security scan stage failure
+            script {
+                if (currentBuild.result == 'FAILURE' && env.STAGE_NAME == 'Security Scan') {
+                    mail to: 'palakbedi2004@gmail.com',
+                        subject: "Security Scan Stage Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                        body: "Security scan stage failed. Please check the logs for more information.",
+                        attachments: 'security_scan_logs.txt'
+                }
+            }
         }
     }
 }
-
