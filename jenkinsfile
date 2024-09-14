@@ -11,25 +11,20 @@ pipeline {
             steps {
                 sleep(3)
                 echo "Building code using Maven..."
-                // Assuming the build process generates some logs
-                sh 'echo "Build logs" > logs/build_logs.txt'
             }
         }
         stage('Test') {
             steps {
                 echo "Running Unit tests and integration from TestNG..."
-                // Simulate generating test logs
-                sh 'mkdir -p logs && echo "Test logs" > logs/test_logs.txt'
             }
             post {
                 always {
-                    // Archive the test logs
-                    archiveArtifacts artifacts: 'logs/test_logs.txt', allowEmptyArchive: true
+                    archiveArtifacts artifacts: '**/test_logs.txt', allowEmptyArchive: true
                     script {
-                        mail to: env.RECIPIENT_EMAIL,
+                        mail to: "palakbedi2004@gmail.com",
                             subject: "Test Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                             body: "The Test stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'logs/test_logs.txt'
+                            attachments: 'test_logs.txt'
                     }
                 }
             }
@@ -37,25 +32,20 @@ pipeline {
         stage('Code Analysis') {
             steps {
                 echo "Performing Code analysis using SonarQube..."
-                // Simulate code analysis logs
-                sh 'mkdir -p logs && echo "Code analysis logs" > logs/code_analysis_logs.txt'
             }
         }
         stage('Security Scan') {
             steps {
                 echo "Performing Security Scan using OWASP..."
-                // Simulate generating security scan logs
-                sh 'mkdir -p logs && echo "Security scan logs" > logs/security_scan_logs.txt'
             }
             post {
                 always {
-                    // Archive the security scan logs
-                    archiveArtifacts artifacts: 'logs/security_scan_logs.txt', allowEmptyArchive: true
+                    archiveArtifacts artifacts: '**/security_scan_logs.txt', allowEmptyArchive: true
                     script {
-                        mail to: env.RECIPIENT_EMAIL,
+                        mail to: "palakbedi2004@gmail.com",
                             subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                             body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'logs/security_scan_logs.txt'
+                            attachments: 'security_scan_logs.txt'
                     }
                 }
             }
@@ -63,22 +53,16 @@ pipeline {
         stage('Deploy to Staging') {
             steps {
                 echo "Deploying to staging in AWS CLI..."
-                // Simulate deployment logs
-                sh 'mkdir -p logs && echo "Deploy to Staging logs" > logs/deploy_logs.txt'
             }
         }
         stage('Integration tests on staging') {
             steps {
                 echo 'Running integration tests on staging with Selenium...'
-                // Simulate integration test logs
-                sh 'mkdir -p logs && echo "Integration test logs" > logs/integration_test_logs.txt'
             }
         }
         stage('Deploy to Production') {
             steps {
-                echo "Deploying to production environment at AWS CLI..."
-                // Simulate deployment to production logs
-                sh 'mkdir -p logs && echo "Deploy to Production logs" > logs/deploy_production_logs.txt'
+                echo "Deploying to production environment at AWS CLI"
             }
         }
     }
@@ -87,4 +71,4 @@ pipeline {
             echo "Pipeline completed."
         }
     }
-}
+} 
