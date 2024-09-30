@@ -60,11 +60,7 @@ pipeline {
                 echo 'Running integration tests on staging with Selenium...'
             }
         }
-        stage('Deploy to Production') {
-            steps {
-                echo "Deploying to production environment at AWS CLI"
-            }
-        }
+        
     }
     post {
         always {
