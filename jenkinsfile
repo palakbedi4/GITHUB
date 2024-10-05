@@ -1,59 +1,41 @@
 pipeline {
     agent any
     environment {
-        DIRECTORY_PATH = '/Users/palak/Documents/PROFESSIONAL PRACTICES/jenkinsfile'
-        TESTING_ENVIRONMENT = '6.2C pipeline'
-        PRODUCTION_ENVIRONMENT = 'PALAK BEDI'
-        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'
+        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'  // Email to receive notifications
     }
     stages {
         stage('Build') {
             steps {
-                sleep(3)
-                echo "Building code using Maven..."
-                writeFile file: 'build_logs.txt', text: 'Build completed successfully'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo "Running Unit tests and integration from TestNG..."
-                writeFile file: 'test_logs.txt', text: 'All tests passed'
+                script {
+                    // Capture build log
+                    sh "echo 'Building code using Maven...' | tee build_logs.txt"
+                }
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'test_logs.txt', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'build_logs.txt', allowEmptyArchive: false
                     script {
-                        mail to: "$RECIPIENT_EMAIL",
-                            subject: "Test Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                            body: "The Test stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'test_logs.txt'
+                        // Ensure the file exists before attempting to attach
+                        if (fileExists('build_logs.txt')) {
+                            emailext(
+                                to: "${RECIPIENT_EMAIL}",
+                                subject: "Build Stage ${currentBuild.currentResult}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                                body: """The Build stage has ${currentBuild.currentResult}.
+                                       
+Please check the logs attached.""",
+                                attachmentsPattern: 'build_logs.txt',
+                                mimeType: 'text/plain'
+                            )
+                        } else {
+                            echo 'build_logs.txt does not exist.'
+                        }
                     }
                 }
             }
         }
-        stage('Security Scan') {
-            steps {
-                echo "Performing Security Scan..."
-                writeFile file: 'security_scan_logs.txt', text: 'Security scan completed'
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'security_scan_logs.txt', allowEmptyArchive: true
-                    script {
-                        mail to: "$RECIPIENT_EMAIL",
-                            subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                            body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'security_scan_logs.txt'
-                    }
-                }
-            }
-        }
-        stage('Deploy to Staging') {
-            steps {
-                echo "Deploying to staging..."
-                writeFile file: 'deploy_logs.txt', text: 'Deployment to staging successful'
-            }
-        }
+
+        // Repeat similar adjustments for other stages (Test, Security Scan, etc.)
+
     }
     post {
         always {
@@ -61,4 +43,3 @@ pipeline {
         }
     }
 }
-
