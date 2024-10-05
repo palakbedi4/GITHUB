@@ -45,7 +45,7 @@ pipeline {
                         mail to: "palakbedi2004@gmail.com",
                             subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                             body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
-                            attatchLog: true,
+                            attatchLog: true
                     }
                 }
             }
