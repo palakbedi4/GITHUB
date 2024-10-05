@@ -1,44 +1,29 @@
 pipeline {
     agent any
     environment {
-        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'  // Email to receive notifications
+        DIRECTORY_PATH = '/Users/palak/Documents/PROFESSIONAL PRACTICES/jenkinsfile'
+        TESTING_ENVIRONMENT = '6.2C pipeline'
+        PRODUCTION_ENVIRONMENT = 'PALAK BEDI'
+        RECIPIENT_EMAIL = 'palakbedi2004@gmail.com'
     }
-
     stages {
         stage('Build') {
             steps {
-                script {
-                    // Create build log and capture output
-                    sh "echo 'Building code using Maven...' | tee build_logs.txt"
-                }
-            }
-            post {
-                always {
-                    // Archive the build log file and send it via email
-                    archiveArtifacts artifacts: 'build_logs.txt', allowEmptyArchive: true
-                    script {
-                        mail to: "${RECIPIENT_EMAIL}",
-                            subject: "Build Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                            body: "The Build stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'build_logs.txt'
-                    }
-                }
+                sleep(3)
+                echo "Building code using Maven..."
+                writeFile file: 'build_logs.txt', text: 'Build completed successfully'
             }
         }
-
         stage('Test') {
             steps {
-                script {
-                    // Create test log and capture output
-                    sh "echo 'Running unit tests with TestNG...' | tee test_logs.txt"
-                }
+                echo "Running Unit tests and integration from TestNG..."
+                writeFile file: 'test_logs.txt', text: 'All tests passed'
             }
             post {
                 always {
-                    // Archive the test log file and send it via email
                     archiveArtifacts artifacts: 'test_logs.txt', allowEmptyArchive: true
                     script {
-                        mail to: "${RECIPIENT_EMAIL}",
+                        mail to: "$RECIPIENT_EMAIL",
                             subject: "Test Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                             body: "The Test stage has ${currentBuild.result}. Please check the logs attached.",
                             attachmentsPattern: 'test_logs.txt'
@@ -46,20 +31,16 @@ pipeline {
                 }
             }
         }
-
         stage('Security Scan') {
             steps {
-                script {
-                    // Create security scan log and capture output
-                    sh "echo 'Simulating security scan...' | tee security_scan_logs.txt"
-                }
+                echo "Performing Security Scan..."
+                writeFile file: 'security_scan_logs.txt', text: 'Security scan completed'
             }
             post {
                 always {
-                    // Archive the security scan log file and send it via email
                     archiveArtifacts artifacts: 'security_scan_logs.txt', allowEmptyArchive: true
                     script {
-                        mail to: "${RECIPIENT_EMAIL}",
+                        mail to: "$RECIPIENT_EMAIL",
                             subject: "Security Scan Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
                             body: "The Security Scan stage has ${currentBuild.result}. Please check the logs attached.",
                             attachmentsPattern: 'security_scan_logs.txt'
@@ -67,32 +48,17 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy to Staging') {
             steps {
-                script {
-                    // Create deploy log and capture output
-                    sh "echo 'Deploying to staging environment...' | tee deploy_logs.txt"
-                }
-            }
-            post {
-                always {
-                    // Archive the deploy log file and send it via email
-                    archiveArtifacts artifacts: 'deploy_logs.txt', allowEmptyArchive: true
-                    script {
-                        mail to: "${RECIPIENT_EMAIL}",
-                            subject: "Deploy Stage ${currentBuild.result}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                            body: "The Deploy stage has ${currentBuild.result}. Please check the logs attached.",
-                            attachmentsPattern: 'deploy_logs.txt'
-                    }
-                }
+                echo "Deploying to staging..."
+                writeFile file: 'deploy_logs.txt', text: 'Deployment to staging successful'
             }
         }
     }
-
     post {
         always {
             echo "Pipeline completed."
         }
     }
 }
+
